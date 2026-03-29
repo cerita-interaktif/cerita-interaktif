@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerita Interaktif</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e4d9;
+    --text-dim: #7a7568;
+    --accent: #c9a84c;
+    --accent2: #8b5cf6;
+    --danger: #e05252;
+    --glow: rgba(201,168,76,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 18px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    animation: fadeIn 0.6s ease;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== LANDING ===== */
+  #screen-landing {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    position: relative;
+  }
+
+  .landing-bg {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(139,92,246,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .logo-mark {
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    opacity: 0.8;
+  }
+
+  .landing-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 80px);
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .landing-title em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .landing-sub {
+    color: var(--text-dim);
+    font-size: 17px;
+    max-width: 400px;
+    line-height: 1.7;
+    margin: 0 auto 40px;
+  }
+
+  .btn-start {
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    padding: 16px 48px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn-start:hover {
+    background: #e0b85a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(201,168,76,0.3);
+  }
+
+  .free-badge {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== GENRE SELECT ===== */
+  #screen-genre {
+    padding: 60px 20px;
+    align-items: center;
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    text-align: center;
+    margin-bottom: 48px;
+    line-height: 1.2;
+  }
+
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .genre-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .genre-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .genre-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-3px);
+  }
+
+  .genre-card:hover::before { opacity: 1; }
+
+  .genre-card.horror { --card-accent: #e05252; }
+  .genre-card.fantasy { --card-accent: #8b5cf6; }
+  .genre-card.scifi { --card-accent: #06b6d4; }
+  .genre-card.romance { --card-accent: #ec4899; }
+  .genre-card.mystery { --card-accent: #f59e0b; }
+  .genre-card.adventure { --card-accent: #22c55e; }
+
+  .genre-card::before { background: linear-gradient(135deg, color-mix(in srgb, var(--card-accent) 8%, transparent), transparent); }
+
+  .genre-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+  .genre-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .genre-desc { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  .genre-card.selected {
+    border-color: var(--card-accent);
+    background: color-mix(in srgb, var(--card-accent) 10%, var(--surface));
+    box-shadow: 0 0 24px color-mix(in srgb, var(--card-accent) 20%, transparent);
+  }
+
+  /* ===== CHARACTER SELECT ===== */
+  #screen-character {
+    padding: 60px 20px;
+    align-items: center;
+  }
+
+  .character-options {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .char-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px 28px;
+    width: 220px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .char-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-3px);
+  }
+
+  .char-card.selected {
+    border-color: var(--accent);
+    background: rgba(201,168,76,0.07);
+    box-shadow: 0 0 24px rgba(201,168,76,0.15);
+  }
+
+  .char-avatar {
+    font-size: 52px;
+    margin-bottom: 16px;
+    display: block;
+    filter: grayscale(0.2);
+  }
+
+  .char-name-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .char-label { font-size: 13px; color: var(--text-dim); letter-spacing: 0.1em; }
+
+  .name-input-wrap {
+    margin-top: 8px;
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .name-input-wrap label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .name-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+  }
+
+  .name-input:focus { border-color: var(--accent); }
+  .name-input::placeholder { color: var(--text-dim); }
+
+  /* ===== STORY ===== */
+  #screen-story {
+    align-items: center;
+    padding: 0;
+  }
+
+  .story-header {
+    width: 100%;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,15,0.9);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .story-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .meta-genre {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(201,168,76,0.1);
+    padding: 4px 10px;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .meta-chapter {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .chapter-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  .dot.done { background: var(--accent); border-color: var(--accent); }
+  .dot.active { background: transparent; border-color: var(--accent); box-shadow: 0 0 8px rgba(201,168,76,0.5); }
+  .dot.locked { background: var(--surface2); }
+
+  .story-body {
+    max-width: 680px;
+    width: 100%;
+    padding: 48px 24px 120px;
+  }
+
+  .chapter-label {
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .story-text {
+    font-size: 19px;
+    line-height: 1.85;
+    color: var(--text);
+    font-weight: 300;
+    white-space: pre-wrap;
+  }
+
+  .story-text .char-highlight {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  /* Typewriter cursor */
+  .typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Choices */
+  .choices-wrap {
+    margin-top: 40px;
+  }
+
+  .choices-label {
+    font-size: 12px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 18px 22px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 17px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+  }
+
+  .choice-btn:hover {
+    background: var(--surface2);
+    border-color: rgba(201,168,76,0.3);
+    padding-left: 28px;
+  }
+
+  .choice-btn:hover::before { transform: scaleY(1); }
+
+  .choice-number {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    margin-right: 10px;
+    font-weight: 600;
+  }
+
+  /* Loading */
+  .loading-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 0;
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  .loading-dots span {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 0 2px;
+    animation: loadDot 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes loadDot {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== PAYWALL ===== */
+  .paywall-wrap {
+    margin-top: 40px;
+    border: 1px solid rgba(201,168,76,0.3);
+    background: linear-gradient(135deg, rgba(201,168,76,0.05), rgba(139,92,246,0.05));
+    padding: 40px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .paywall-wrap::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .paywall-icon { font-size: 40px; margin-bottom: 16px; }
+
+  .paywall-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+
+  .paywall-desc {
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1.7;
+    max-width: 400px;
+    margin: 0 auto 28px;
+  }
+
+  .paywall-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .paywall-period { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; }
+
+  .btn-unlock {
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    padding: 16px 44px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn-unlock:hover {
+    background: #e0b85a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(201,168,76,0.3);
+  }
+
+  .paywall-features {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pf-item { font-size: 13px; color: var(--text-dim); }
+  .pf-item::before { content: '✦ '; color: var(--accent); }
+
+  /* Blur overlay on locked text */
+  .blur-fade {
+    position: relative;
+    overflow: hidden;
+    max-height: 120px;
+  }
+
+  .blur-fade::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+
+  /* Nav buttons */
+  .nav-wrap {
+    margin-top: 32px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-restart {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 10px 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-restart:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Continue btn */
+  .btn-next {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 14px 32px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 24px;
+  }
+
+  .btn-next:hover { background: rgba(201,168,76,0.1); }
+
+  /* Step nav */
+  .step-nav {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .btn-back {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .btn-back:hover { color: var(--text); }
+
+  .btn-proceed {
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    padding: 14px 40px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .btn-proceed.enabled {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .btn-proceed.enabled:hover {
+    background: #e0b85a;
+    transform: translateY(-2px);
+  }
+
+  /* Error */
+  .error-msg {
+    color: var(--danger);
+    font-size: 14px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* Scroll reveal choices */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .choices-wrap { animation: slideUp 0.5s ease; }
+
+  /* Divider */
+  .story-divider {
+    text-align: center;
+    color: var(--text-dim);
+    margin: 32px 0;
+    font-size: 20px;
+    letter-spacing: 0.3em;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- SCREEN: LANDING -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-bg"></div>
+  <div class="logo-mark">✦ Cerita Interaktif ✦</div>
+  <h1 class="landing-title">Kamu adalah<br><em>Tokoh Utamanya</em></h1>
+  <p class="landing-sub">Setiap pilihan mengubah cerita. Setiap jalan memiliki konsekuensi. Takdirmu ada di tanganmu.</p>
+  <button class="btn-start" onclick="showScreen('genre')">Mulai Petualangan</button>
+  <p class="free-badge">✦ 3 Chapter Gratis &nbsp;·&nbsp; Tanpa Daftar ✦</p>
+</div>
+
+<!-- SCREEN: GENRE -->
+<div id="screen-genre" class="screen">
+  <p class="section-eyebrow">Langkah 1 dari 2</p>
+  <h2 class="section-title">Pilih Duniamu</h2>
+  <div class="genre-grid" id="genreGrid">
+    <div class="genre-card horror" data-genre="Horror" data-prompt="psychological horror, dark atmosphere, supernatural dread, found-footage style" onclick="selectGenre(this)">
+      <span class="genre-icon">🕯️</span>
+      <div class="genre-name">Horor</div>
+      <div class="genre-desc">Kegelapan menanti. Sesuatu mengikutimu.</div>
+    </div>
+    <div class="genre-card fantasy" data-genre="Fantasi" data-prompt="epic fantasy, magic system, mythical creatures, kingdom politics" onclick="selectGenre(this)">
+      <span class="genre-icon">⚔️</span>
+      <div class="genre-name">Fantasi</div>
+      <div class="genre-desc">Dunia ajaib, naga, dan takdir pahlawan.</div>
+    </div>
+    <div class="genre-card scifi" data-genre="Sci-Fi" data-prompt="cyberpunk sci-fi, advanced AI, dystopian future, space exploration" onclick="selectGenre(this)">
+      <span class="genre-icon">🚀</span>
+      <div class="genre-name">Sci-Fi</div>
+      <div class="genre-desc">Masa depan, teknologi, dan misteri antariksa.</div>
+    </div>
+    <div class="genre-card romance" data-genre="Romance" data-prompt="romantic drama, emotional tension, secret pasts, forbidden love" onclick="selectGenre(this)">
+      <span class="genre-icon">🌹</span>
+      <div class="genre-name">Romance</div>
+      <div class="genre-desc">Cinta, air mata, dan pilihan hati.</div>
+    </div>
+    <div class="genre-card mystery" data-genre="Misteri" data-prompt="detective mystery, clues, red herrings, psychological twists, noir atmosphere" onclick="selectGenre(this)">
+      <span class="genre-icon">🔍</span>
+      <div class="genre-name">Misteri</div>
+      <div class="genre-desc">Teka-teki dan rahasia yang menunggu terkuak.</div>
+    </div>
+    <div class="genre-card adventure" data-genre="Petualangan" data-prompt="action adventure, exploration, ancient ruins, survival, treasure hunt" onclick="selectGenre(this)">
+      <span class="genre-icon">🗺️</span>
+      <div class="genre-name">Petualangan</div>
+      <div class="genre-desc">Peta, harta karun, dan bahaya di setiap tikungan.</div>
+    </div>
+  </div>
+  <div class="step-nav">
+    <button class="btn-back" onclick="showScreen('landing')">← Kembali</button>
+    <button class="btn-proceed" id="btnGenreNext" onclick="showScreen('character')">Lanjut →</button>
+  </div>
+</div>
+
+<!-- SCREEN: CHARACTER -->
+<div id="screen-character" class="screen">
+  <p class="section-eyebrow">Langkah 2 dari 2</p>
+  <h2 class="section-title">Siapa Kamu?</h2>
+  <div class="character-options">
+    <div class="char-card" id="charDante" onclick="selectChar('Dante', 'male', this)">
+      <span class="char-avatar">🧔</span>
+      <div class="char-name-display">Dante</div>
+      <div class="char-label">Pria · Misterius</div>
+    </div>
+    <div class="char-card" id="charDaisy" onclick="selectChar('Daisy', 'female', this)">
+      <span class="char-avatar">👩</span>
+      <div class="char-name-display">Daisy</div>
+      <div class="char-label">Wanita · Pemberani</div>
+    </div>
+  </div>
+  <div class="name-input-wrap">
+    <label>Atau masukkan namamu sendiri</label>
+    <input type="text" class="name-input" id="customName" placeholder="Nama karaktermu..." maxlength="24"
+      oninput="onCustomName(this.value)" />
+  </div>
+  <div class="step-nav">
+    <button class="btn-back" onclick="showScreen('genre')">← Kembali</button>
+    <button class="btn-proceed" id="btnCharNext" onclick="startStory()">Mulai Cerita →</button>
+  </div>
+</div>
+
+<!-- SCREEN: STORY -->
+<div id="screen-story" class="screen">
+  <div class="story-header">
+    <div class="story-meta">
+      <span class="meta-genre" id="headerGenre">Genre</span>
+      <span class="meta-chapter" id="headerChapter">Chapter 1</span>
+    </div>
+    <div class="chapter-dots" id="chapterDots"></div>
+  </div>
+  <div class="story-body">
+    <div class="chapter-label" id="chapterLabel">Chapter I</div>
+    <div class="story-text" id="storyText"></div>
+    <div id="storyChoices"></div>
+    <div class="nav-wrap">
+      <button class="btn-restart" onclick="showScreen('landing')">↺ Mulai Ulang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const state = {
+  genre: '', genrePrompt: '', charName: '', charGender: '',
+  chapter: 1, maxFree: 3,
+  history: [], // {text, choice}
+  loading: false
+};
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function selectGenre(el) {
+  document.querySelectorAll('.genre-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.genre = el.dataset.genre;
+  state.genrePrompt = el.dataset.prompt;
+  document.getElementById('btnGenreNext').classList.add('enabled');
+}
+
+function selectChar(name, gender, el) {
+  document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.charName = name;
+  state.charGender = gender;
+  document.getElementById('customName').value = '';
+  document.getElementById('btnCharNext').classList.add('enabled');
+}
+
+function onCustomName(val) {
+  if (val.trim().length > 0) {
+    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+    state.charName = val.trim();
+    state.charGender = 'unspecified';
+    document.getElementById('btnCharNext').classList.add('enabled');
+  } else {
+    document.getElementById('btnCharNext').classList.remove('enabled');
+  }
+}
+
+function buildChapterDots() {
+  const wrap = document.getElementById('chapterDots');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    if (i < state.chapter) d.classList.add('done');
+    else if (i === state.chapter) d.classList.add('active');
+    else if (i > state.maxFree) d.classList.add('locked');
+    wrap.appendChild(d);
+  }
+}
+
+async function startStory() {
+  if (!state.charName) return;
+  state.chapter = 1;
+  state.history = [];
+  showScreen('story');
+  document.getElementById('headerGenre').textContent = state.genre;
+  await loadChapter();
+}
+
+async function loadChapter(choiceMade = null) {
+  if (state.chapter > state.maxFree) {
+    showPaywall();
+    return;
+  }
+
+  state.loading = true;
+  buildChapterDots();
+  document.getElementById('headerChapter').textContent = `Chapter ${state.chapter}`;
+  document.getElementById('chapterLabel').textContent = `Chapter ${toRoman(state.chapter)}`;
+  document.getElementById('storyChoices').innerHTML = '<div class="loading-wrap">Menulis cerita<div class="loading-dots"><span></span><span></span><span></span></div></div>';
+  document.getElementById('storyText').innerHTML = '';
+
+  const prompt = buildPrompt(choiceMade);
+
+  try {
+    const response = await fetch("/api/story", {
+      method: "POST",
+      headers: { "Content-Type": "application/json",   "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: `Kamu adalah penulis cerita interaktif berbahasa Indonesia yang luar biasa. 
+Genre: ${state.genre} (${state.genrePrompt}).
+Tokoh utama bernama ${state.charName}${state.charGender !== 'unspecified' ? ` (${state.charGender === 'male' ? 'laki-laki' : 'perempuan'})` : ''}.
+Gunakan sudut pandang orang kedua ("kamu") agar pembaca merasa jadi tokoh utama.
+Nama tokoh utama harus ditonjolkan dengan menyebutnya beberapa kali.
+Tulis cerita yang imersif, mendebarkan sesuai genre, dengan deskripsi detail. 3-4 paragraf per chapter.
+Akhiri SELALU dengan JSON pilihan dalam format:
+---CHOICES---
+{"choices": ["pilihan 1", "pilihan 2", "pilihan 3"]}
+---END---
+Pilihan harus singkat (max 10 kata), relevan, dan membuat penasaran.`,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content[0].text;
+
+    // Parse story and choices
+    const choiceMatch = raw.match(/---CHOICES---([\s\S]*?)---END---/);
+    let storyPart = raw.replace(/---CHOICES---([\s\S]*?)---END---/, '').trim();
+    let choices = [];
+
+    if (choiceMatch) {
+      try {
+        const parsed = JSON.parse(choiceMatch[1].trim());
+        choices = parsed.choices || [];
+      } catch(e) {}
+    }
+
+    // Save to history
+    state.history.push({ text: storyPart, choice: choiceMade });
+
+    // Typewrite the story
+    await typewriteText('storyText', storyPart);
+
+    // Show choices
+    renderChoices(choices);
+
+  } catch(e) {
+    document.getElementById('storyChoices').innerHTML = `<div class="error-msg">Gagal memuat cerita. Coba lagi.</div>`;
+  }
+
+  state.loading = false;
+}
+
+function buildPrompt(choiceMade) {
+  if (state.history.length === 0) {
+    return `Tulis chapter 1 / pembukaan cerita ${state.genre}. Perkenalkan ${state.charName} dan situasi awalnya yang menarik. Buat pembaca langsung tersedot ke dalam cerita.`;
+  }
+
+  const prev = state.history[state.history.length - 1];
+  return `Ini adalah chapter ${state.chapter} dari cerita ${state.genre}.
+
+CHAPTER SEBELUMNYA:
+${prev.text.substring(0, 600)}...
+
+PILIHAN PEMBACA: "${choiceMade}"
+
+Lanjutkan cerita berdasarkan pilihan tersebut. Tunjukkan konsekuensi dari pilihan ${state.charName}. Buat chapter ini lebih menegangkan dari sebelumnya.`;
+}
+
+async function typewriteText(elemId, text) {
+  const el = document.getElementById(elemId);
+  el.innerHTML = '';
+  
+  // Highlight character name
+  const highlighted = text.replace(
+    new RegExp(state.charName, 'g'),
+    `<span class="char-highlight">${state.charName}</span>`
+  );
+
+  // Use innerHTML approach with temp div
+  const temp = document.createElement('div');
+  temp.innerHTML = highlighted;
+  const fullText = temp.textContent;
+  const fullHtml = highlighted;
+
+  // Fast typewrite (just fade in paragraphs)
+  el.innerHTML = '';
+  const paras = fullHtml.split(/\n\n+/);
+  for (let i = 0; i < paras.length; i++) {
+    const p = document.createElement('p');
+    p.innerHTML = paras[i];
+    p.style.opacity = '0';
+    p.style.transform = 'translateY(8px)';
+    p.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    p.style.marginBottom = '20px';
+    el.appendChild(p);
+    await sleep(100);
+    p.style.opacity = '1';
+    p.style.transform = 'translateY(0)';
+    await sleep(300);
+  }
+}
+
+function renderChoices(choices) {
+  const wrap = document.getElementById('storyChoices');
+  if (!choices.length) { wrap.innerHTML = ''; return; }
+
+  let html = `<div class="story-divider">· · ·</div><div class="choices-wrap"><p class="choices-label">Apa yang akan kamu lakukan?</p>`;
+  choices.forEach((c, i) => {
+    html += `<button class="choice-btn" onclick="makeChoice('${c.replace(/'/g, "\\'")}')">
+      <span class="choice-number">${['I','II','III','IV'][i]}.</span>${c}
+    </button>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  // Scroll to choices
+  setTimeout(() => wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+}
+
+async function makeChoice(choice) {
+  state.chapter++;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  await sleep(300);
+  await loadChapter(choice);
+}
+
+function showPaywall() {
+  buildChapterDots();
+  document.getElementById('headerChapter').textContent = `Chapter ${state.chapter}`;
+  
+  const lastText = state.history[state.history.length - 1]?.text || '';
+  const preview = lastText.substring(0, 150) + '...';
+
+  document.getElementById('storyChoices').innerHTML = `
+    <div class="blur-fade">
+      <p style="opacity:0.4;font-size:17px;line-height:1.8;margin-top:24px">${preview}</p>
+    </div>
+    <div class="paywall-wrap">
+      <div class="paywall-icon">🔐</div>
+      <h3 class="paywall-title">Cerita Berlanjut...</h3>
+      <p class="paywall-desc">Kamu telah mencapai batas chapter gratis. Unlock akses penuh untuk membaca semua chapter dan melihat semua akhir cerita.</p>
+      <div class="paywall-price">Rp 15.000</div>
+      <div class="paywall-period">per bulan · Akses semua genre & cerita</div>
+      <button class="btn-unlock" onclick="alert('Fitur pembayaran akan segera hadir! 🚀')">Unlock Sekarang</button>
+      <div class="paywall-features">
+        <span class="pf-item">Cerita Tak Terbatas</span>
+        <span class="pf-item">Semua Genre</span>
+        <span class="pf-item">Multiple Ending</span>
+        <span class="pf-item">Simpan Progress</span>
+      </div>
+    </div>`;
+
+  document.getElementById('storyText').innerHTML = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toRoman(n) {
+  return ['I','II','III','IV','V','VI','VII','VIII','IX','X'][n-1] || n;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
