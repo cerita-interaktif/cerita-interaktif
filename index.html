@@ -851,7 +851,7 @@ async function loadChapter(choiceMade = null) {
   try {
     const response = await fetch("/api/story", {
       method: "POST",
-      headers: { "Content-Type": "application/json",   "anthropic-dangerous-direct-browser-access": "true" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1000,
